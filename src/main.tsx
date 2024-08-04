@@ -16,12 +16,22 @@ import {
   QueryClientProvider,
   QueryClient,
 } from "@tanstack/react-query";
+import {
+  metaMaskWallet
+} from '@rainbow-me/rainbowkit/wallets';
+
 
 const config = getDefaultConfig({
   appName: 'My RainbowKit App',
   projectId: 'YOUR_PROJECT_ID',
   chains: [ optimism, base],
   ssr: true, // If your dApp uses server side rendering (SSR)
+  wallets:[
+    {
+      groupName: 'Recommended',
+      wallets: [metaMaskWallet], // Only Metamask to support the snap
+    },
+  ]
 });
 
 const queryClient = new QueryClient();

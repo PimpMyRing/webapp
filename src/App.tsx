@@ -5,6 +5,7 @@ import ProposalDetail from './components/Proposal';
 import About from './components/About';
 import Footer from './components/Footer';
 import Onboarding from './components/Onboarding';
+import MyProfile from './components/MyProfile';
 
 function App() {
 
@@ -17,7 +18,7 @@ function App() {
             <Route path="/" element={<MainListing />} />
             <Route path="/proposals/:id" element={<ProposalDetail />} />
             <Route path="/about" element={<About />} />
-            <Route path="/profile" element={<div>My Profile</div>} />
+            <Route path="/profile" element={<MyProfile/>} />
             <Route path="/proposals" element={<MainListing />} />
             <Route path="/newMember" element={<Onboarding />}/>
           </Routes>
