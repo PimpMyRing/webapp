@@ -1,39 +1,33 @@
-// src/utils/api.ts
+import { Proposal, Discussion } from '../utils/types';
 
-import { Proposal } from '../utils/types';
+const API_BASE_URL = 'http://localhost:3022/api'; // CHANGE ME DADDY
 
 export const fetchProposals = async (): Promise<Proposal[]> => {
-    // Simuler une réponse API pour les tests
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          {
-            id: '1',
-            title: 'Proposal 1',
-            publicationDate: '2023-01-01',
-            closingDate: '2023-01-10',
-            votes: 100,
-          },
-          {
-            id: '2',
-            title: 'Proposal 2',
-            publicationDate: '2023-02-01',
-            closingDate: '2023-02-10',
-            votes: 200,
-          },
-          {
-            id: '3',
-            title: 'Proposal 3',
-            publicationDate: '2023-03-01',
-            closingDate: '2023-03-10',
-            votes: 300,
-          },
-        ]);
-      }, 1000);
-    });
-  };
-  
-  export const fetchProposalById = async (id: string): Promise<Proposal | null> => {
-    const proposals = await fetchProposals();
-    return proposals.find(proposal => proposal.id === id) || null;
-  };
+  const response = await fetch(`${API_BASE_URL}/proposals`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch proposals');
+  }
+  const data = await response.json();
+  return data;
+};
+
+export const fetchProposalById = async (id: string): Promise<Proposal | null> => {
+  const response = await fetch(`${API_BASE_URL}/proposals/${id}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch proposal');
+  }
+  const data = await response.json();
+  return data;
+};
+
+export const fetchDiscussionByProposalId = async (proposalId: string): Promise<Discussion | null> => {
+  const response = await fetch(`${API_BASE_URL}/discussions/${proposalId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch discussion');
+  }
+  const data = await response.json();
+  if (data.messages.length === 0) {
+    return null; // Empty
+  }
+  return data;
+};
