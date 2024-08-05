@@ -24,10 +24,22 @@ const MainListing: React.FC = () => {
     navigate(`/proposals/${id}`);
   };
 
+  const handleNewProposalClick = () => {
+    navigate('/new-proposal');
+  };
+
   return (
     <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-white">Proposals</h2>
+        <button
+          className="bg-blue-600 text-white rounded px-4 py-2"
+          onClick={handleNewProposalClick}
+        >
+          New Proposal
+        </button>
+      </div>
       <div className="bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-semibold text-white mb-4 text-center">Proposals</h2>
         <table className="min-w-full bg-gray-700 rounded-lg">
           <thead>
             <tr>

@@ -31,3 +31,17 @@ export const fetchDiscussionByProposalId = async (proposalId: string): Promise<D
   }
   return data;
 };
+
+export const submitProposal = async (newProposal: Proposal): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/proposals`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(newProposal),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to submit proposal');
+  }
+};
