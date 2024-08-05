@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Proposal } from '../utils/types';
 import { fetchProposals } from '../api/apicall';
+import { newAnonProposal } from '../utils/newProposal';
 
 const MainListing: React.FC = () => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -28,6 +29,20 @@ const MainListing: React.FC = () => {
     navigate('/new-proposal');
   };
 
+  ////////////////////////
+  const handleTest = async () => {
+    const result = await newAnonProposal(
+      11155420,
+      "0x852eE1B990bc39041232Ea832e77b789481d6b6d",
+      {
+        description: "Test Proposal" + Date.now(),
+      }
+    )
+
+    console.log("result: ", result);
+  };
+  ////////////////////////
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
@@ -38,6 +53,11 @@ const MainListing: React.FC = () => {
         >
           New Proposal
         </button>
+        <button
+          className="bg-blue-600 text-white rounded px-4 py-2"
+
+          onClick={handleTest}
+        >Test</button>
       </div>
       <div className="bg-gray-800 rounded-lg shadow-md p-6">
         <table className="min-w-full bg-gray-700 rounded-lg">

@@ -1,23 +1,68 @@
 import React, { useEffect, useState } from 'react';
-import { detectRingSignatureSnap, installSnap, importAccount, exportKeyImages, getAddresses } from '@cypher-laboratory/alicesring-snap-sdk';
+import {
+  detectRingSignatureSnap,
+  installSnap,
+  importAccount,
+  exportKeyImages,
+  getAddresses
+} from '@cypher-laboratory/alicesring-snap-sdk';
+import { ethers } from 'ethers';
+import { NFT_ADDRESS } from '../constant';
+import { useNavigate } from 'react-router-dom';
+import { newAnonProposal } from '../utils/newProposal';
 
 const OnboardingStep: React.FC = () => {
-  const [privacyLevel, setPrivacyLevel] = useState<'full' | 'partial' | null>(null);
+  const [privacyLevel, setPrivacyLevel] = useState<'full' | 'partial'>('full');
   const [isRSSnapInstalled, setIsRSSnapInstalled] = useState<boolean>(false);
-  const [step, setStep] = useState<number>(0); // New state to track the step
-  const [daoId, setDaoId] = useState<string | null>(null);
+  const [step, setStep] = useState<number>(0);
+  const [metaMaskAddress, setMetaMaskAddress] = useState<string | null>(null);
+  const [snapAddresses, setSnapAddresses] = useState<string[]>([]);
+  const [keyImage, setKeyImage] = useState<string | null>(null);
+  const navigate = useNavigate(); // useNavigate hook
+
+  // Check if the user has already completed onboarding
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+        const chainId = (await provider.getNetwork()).chainId;
+        const storedData = localStorage.getItem(`${address}_${chainId}`);
+        if (storedData) {
+          navigate('/');
+          return;
+        }
+      }
+    };
+    checkOnboardingStatus();
+  }, [navigate]);
 
   useEffect(() => {
     (async () => {
       if (await detectRingSignatureSnap()) {
         setIsRSSnapInstalled(true);
-        setStep(1);
       }
     })();
   }, []);
 
-  const handlePrivacyChange = (level: 'full' | 'partial') => {
-    setPrivacyLevel(level);
+  useEffect(() => {
+    if (step === 1 && isRSSnapInstalled) {
+      setStep(2);
+    }
+  }, [step, isRSSnapInstalled]);
+
+  const connectMetaMask = async () => {
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+      setMetaMaskAddress(address);
+      setStep(1);
+    } else {
+      alert('MetaMask is not installed. Please install it to proceed.');
+    }
   };
 
   const handleInstallSnap = async () => {
@@ -25,48 +70,95 @@ const OnboardingStep: React.FC = () => {
     const result = await installSnap();
     if (result) {
       setIsRSSnapInstalled(true);
-      setStep(1);
+      setStep(2);
     }
   };
 
   const handleExportAddresses = async () => {
     console.log('Exporting snap addresses');
     const addresses = await getAddresses();
-    if (addresses) {
-      console.log('Addresses exported:', addresses);
-      setStep(2);
+    if (addresses && addresses.length > 0) {
+      setSnapAddresses(addresses);
+
+      if (
+        metaMaskAddress &&
+        addresses.map((address: string) => address.toLowerCase()).includes(metaMaskAddress.toLowerCase())
+      ) {
+        setStep(4);
+        return;
+      } else {
+        alert('Current MetaMask address does not match any exported snap addresses. Please import the account.');
+      }
     }
+    setStep(3);
   };
 
   const handleImportAccount = async () => {
-    console.log('Importing new account');
-    await importAccount();
-    handleExportAddresses();
-  };
-
-  const handleExportKeyImages = async () => {
-    console.log('Exporting key images with linkability flag "alphabet"');
-    const keyImages = await exportKeyImages(['address'], 'alphabet');
-    if (keyImages && keyImages.length > 0) {
-      const keyImage = keyImages.find((ki) => ki.address === 'address')?.keyImage;
-      if (!keyImage) {
-        alert('Key image not found');
-        return;
-      }
-      console.log('Key images exported:', keyImages);
-      setStep(3);
-      setDaoId(keyImage);
+    console.log('Importing MetaMask account into snap');
+    const imported = await importAccount();
+    if (imported) {
+      await handleExportAddresses();
     }
   };
 
-  const handleJoinDAO = () => {
-    if (privacyLevel) {
-      console.log(`User selected ${privacyLevel} privacy level and is joining the DAO.`);
-      // Additional logic to join the DAO with the selected privacy level
+  const handleExportKeyImages = async () => {
+    console.log('Exporting key images with linkability flag "chainId-dao-of-the-ring"');
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const chainId = await provider.getNetwork();
+    const keyImages = await exportKeyImages(snapAddresses, `${chainId.chainId}_dao-of-the-ring`);
+    if (keyImages) {
+      console.log('Key images exported:', keyImages);
+      const keyImage = keyImages.find((ki) => ki.address.toLowerCase() === metaMaskAddress?.toLowerCase())?.keyImage;
+      if (!keyImage) return;
+      setKeyImage(keyImage);
+      setStep(5);
+    }
+  };
+
+  const handlePrivacyChange = (level: 'full' | 'partial') => {
+    setPrivacyLevel(level);
+  };
+
+  const handleMintMembershipNFT = async () => {
+    if (privacyLevel && metaMaskAddress) {
+      console.log(`Minting membership NFT with ${privacyLevel} privacy.`);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const chainId = await provider.getNetwork();
+
+      let membershipAddress = "";
+      switch (chainId.chainId) {
+        case 10: {
+          membershipAddress = NFT_ADDRESS.optimism;
+          break;
+        }
+        case 11155420: {
+          membershipAddress = NFT_ADDRESS.optimism_sepolia;
+          break;
+        }
+        case 8453: {
+          membershipAddress = NFT_ADDRESS.base;
+          break;
+        }
+        default:
+          alert('Please switch to Optimism, OP sepolia or Base to mint the NFT.');
+          return;
+      }
+
+      const contract = new ethers.Contract(membershipAddress, ["function mint(uint8 level) public"], signer);
+      const tx = await contract.mint(privacyLevel === 'full' ? 1 : 0);
+      console.log("mint tx: " + (await tx.wait()).transactionHash);;
+      // Display a snackbar or toast message to the user
+      alert('Membership NFT minted successfully.');
+
+      localStorage.setItem(metaMaskAddress + "_" + chainId.chainId, JSON.stringify({ privacyLevel, keyImage }));
+      setStep(6);
     } else {
       alert('Please select a privacy level.');
     }
   };
+
+
 
   return (
     <div className="container mx-auto p-4">
@@ -93,27 +185,21 @@ const OnboardingStep: React.FC = () => {
         {step === 0 && (
           <div className="flex justify-center">
             <button
-              onClick={handleInstallSnap}
+              onClick={connectMetaMask}
               className="bg-green-600 text-white rounded-full px-4 py-2"
             >
-              Install the MetaMask Plugin
+              Start My Journey
             </button>
           </div>
         )}
 
-        {step === 1 && (
-          <div className="flex justify-center space-x-4">
+        {step === 1 && !isRSSnapInstalled && (
+          <div className="flex justify-center">
             <button
-              onClick={handleExportAddresses}
+              onClick={handleInstallSnap}
               className="bg-blue-600 text-white rounded-full px-4 py-2"
             >
-              Export Snap Addresses
-            </button>
-            <button
-              onClick={handleImportAccount}
-              className="bg-blue-600 text-white rounded-full px-4 py-2"
-            >
-              Import New Account
+              Install the MetaMask Plugin
             </button>
           </div>
         )}
@@ -121,18 +207,29 @@ const OnboardingStep: React.FC = () => {
         {step === 2 && (
           <div className="flex justify-center">
             <button
-              onClick={handleExportKeyImages}
+              onClick={handleExportAddresses}
               className="bg-blue-600 text-white rounded-full px-4 py-2"
             >
-              Export Key Images
+              Export Snap Addresses
             </button>
           </div>
         )}
 
         {step === 3 && (
+          <div className="flex justify-center">
+            <button
+              onClick={handleImportAccount}
+              className="bg-blue-600 text-white rounded-full px-4 py-2"
+            >
+              Import MetaMask Account into Snap
+            </button>
+          </div>
+        )}
+
+        {step === 4 && (
           <div className="text-center">
             <div className="mb-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Your DAO ID: {daoId}</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Select Your Privacy Level</h3>
               <p className="text-gray-400">Please select your privacy level before joining the DAO.</p>
             </div>
             <div className="flex justify-center space-x-4 mb-4">
@@ -159,12 +256,41 @@ const OnboardingStep: React.FC = () => {
             </div>
             <div className="flex justify-center">
               <button
-                onClick={handleJoinDAO}
-                className="bg-green-600 text-white rounded-full px-4 py-2"
+                onClick={privacyLevel === 'full' ? handleExportKeyImages : () => setStep(5)}
+                className="bg-blue-600 text-white rounded-full px-4 py-2"
               >
-                Join DAO
+                {privacyLevel === 'full' ? "Export Key Image" : "Next step"}
               </button>
             </div>
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="text-center">
+            <div className="mb-6">
+              <p className="text-gray-400">You are ready to mint your membership NFT!</p>
+            </div>
+            <div className="flex justify-center">
+              <button
+                onClick={handleMintMembershipNFT}
+                className="bg-green-600 text-white rounded-full px-4 py-2"
+              >
+                Mint Membership NFT
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 6 && (
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-white mb-4">Congratulations!</h3>
+            <p className="text-gray-400">You have successfully minted your membership NFT. Welcome to the DAO!</p>
+            <button
+              className="bg-blue-600 text-white rounded-full px-4 py-2"
+              onClick={() => navigate('/')}
+            >
+              Go to Home
+            </button>
           </div>
         )}
       </div>
