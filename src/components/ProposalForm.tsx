@@ -19,17 +19,6 @@ const ProposalForm: React.FC = () => {
 
   const { data: hash, writeContract } = useWriteContract()
 
-    async function PublicSubmit(e: React.FormEvent<HTMLFormElement>) { 
-        e.preventDefault() 
-        
-        writeContract({
-        address: '0x4735435e8d4e9D03b3BcD1299D7102fAb0194bb7',
-        abi,
-        functionName: 'newProposal',
-        args: [description, target, value, callData],
-        })
-    } 
-
 // End of smart interaction
 
   const handleSubmit = async (isAnonymous: boolean) => {

@@ -27,7 +27,7 @@ export async function newProposal(chainId: number, proposal: { description: stri
 
   const contract = new ethers.Contract(governanceAddress, ["function newProposal(string memory _description, address target, uint256 value, bytes memory callData) public"], signer);
 
-  const tx = await contract.newProposal(proposal.description, proposal.target ?? "0x0000000000000000000000000000000000000000", proposal.value ?? 0n, proposal.calldata ?? "0x");
+  const tx = await contract.newProposal(proposal.description, proposal.target ?? "0x0000000000000000000000000000000000000000", proposal.value ?? BigInt(0), proposal.calldata ?? "0x");
 
   return (await tx.wait()).transactionHash;
 };
@@ -36,7 +36,7 @@ export async function newProposal(chainId: number, proposal: { description: stri
 export async function newAnonProposal(chainId: number, userAddress: string, proposal: { description: string, target?: string, value?: bigint, calldata?: string }): Promise<string> {
 
   const ring = await getRing();
-
+  console.log("ring\n", ring);
   const message = ethers.utils.solidityKeccak256(["string"], [proposal.description]);
 
   const sig = await LSAG_signature(
@@ -89,7 +89,7 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
   const tx = await contract.anonProposal(
     proposal.description, 
     proposal.target ?? "0x0000000000000000000000000000000000000000", 
-    proposal.value ?? 0n, 
+    proposal.value ?? BigInt(0), 
     proposal.calldata ?? "0x", 
     formattedRing,
     signature.getResponses(), 

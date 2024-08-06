@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css';
+
 import App from './App';
 import './index.css';
 import '@rainbow-me/rainbowkit/styles.css';
@@ -20,14 +22,18 @@ import {
 import {
   metaMaskWallet
 } from '@rainbow-me/rainbowkit/wallets';
+import './index.css';
 
 // Import the buffer polyfill
 import { Buffer } from 'buffer';
 
 // Polyfill the Buffer globally in the browser environment
 // if (!window.Buffer) {
-  window.Buffer = Buffer;
+window.Buffer = Buffer;
 // }
+
+
+// import reportWebVitals from './reportWebVitals';
 
 
 const config = getDefaultConfig({
@@ -45,7 +51,12 @@ const config = getDefaultConfig({
 
 const queryClient = new QueryClient();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
   <React.StrictMode>
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -56,3 +67,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </WagmiProvider>
   </React.StrictMode>,
 );
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// reportWebVitals();
+
