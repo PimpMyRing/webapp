@@ -1,6 +1,7 @@
 import { Proposal, Discussion } from '../utils/types';
+import { API_URL } from "../constant";
 
-const API_BASE_URL = 'http://localhost:3022/api'; // CHANGE ME DADDY
+const API_BASE_URL = API_URL;
 
 export const fetchProposals = async (): Promise<Proposal[]> => {
   const response = await fetch(`${API_BASE_URL}/proposals`);
@@ -43,5 +44,15 @@ export const submitProposal = async (newProposal: Proposal): Promise<void> => {
 
   if (!response.ok) {
     throw new Error('Failed to submit proposal');
+  }
+};
+
+export const incrementVoteCount = async (proposalId: string): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/proposals/${proposalId}/vote`, {
+    method: 'PATCH',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to increment vote count');
   }
 };

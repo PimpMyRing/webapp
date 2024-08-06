@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 import { Proposal } from '../utils/types';
 import { fetchProposalById } from '../api/apicall';
 import Discussion from './Discussion';
+import { vote } from '../utils/vote';
+import { installSnap } from '@cypher-laboratory/alicesring-snap-sdk';
+import { incrementVoteCount } from "../api/apicall";
 
 const ProposalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isVoting, setIsVoting] = useState<boolean>(false);
+  const { address } = useAccount();
+  const { chainId} = useAccount();
+
 
   useEffect(() => {
     const getProposal = async () => {
@@ -22,6 +31,29 @@ const ProposalDetail: React.FC = () => {
 
     getProposal();
   }, [id]);
+
+  const handleVote = async (side: boolean, privacyLevel: 'full' | 'partial') => {
+    if (!id || !address) return;
+
+    setIsVoting(true);
+    try {
+      // Check if the Snap is installed
+      const isInstalled = await installSnap();
+      if (!isInstalled) {
+        throw new Error('Snap installation failed. Please install the Snap to proceed.');
+      }
+
+      const chainID = chainId || 1;
+      console.log('Chain ID:', chainID);
+      const txHash = await vote(side, chainID, id, address, privacyLevel);
+      console.log('Transaction hash:', txHash);
+      await incrementVoteCount(id); // API should check onchain count btw
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsVoting(false);
+    }
+  };
 
   if (!proposal) {
     return (
@@ -52,6 +84,23 @@ const ProposalDetail: React.FC = () => {
             <strong>Author:</strong> {proposal.author}
           </div>
         </div>
+        <div className="flex justify-center space-x-4 mb-4">
+          <button
+            className="bg-blue-600 text-white rounded px-4 py-2"
+            onClick={() => handleVote(true, 'partial')}
+            disabled={isVoting}
+          >
+            Vote Publicly
+          </button>
+          <button
+            className="bg-gray-600 text-white rounded px-4 py-2"
+            onClick={() => handleVote(true, 'full')}
+            disabled={isVoting}
+          >
+            Vote Anonymously
+          </button>
+        </div>
+        {error && <p className="text-red-500">{error}</p>}
       </div>
       <Discussion proposalId={proposal.id} />
     </div>
