@@ -3,6 +3,7 @@ import { GOVERNANCE_CONTRACT } from "../constant";
 import { getRing } from "./vote";
 import { ethers } from "ethers";
 import { Point, RingSignature } from "@cypher-laboratory/alicesring-lsag";
+import {DAOofTheRingABI} from "../abi/DAOofTheRing";
 
 export async function newProposal(chainId: number, proposal: { description: string, target?: string, value?: bigint, calldata?: string }): Promise<string> {
 
@@ -34,27 +35,27 @@ export async function newProposal(chainId: number, proposal: { description: stri
 
 
 export async function newAnonProposal(chainId: number, userAddress: string, proposal: { description: string, target?: string, value?: bigint, calldata?: string }): Promise<string> {
-
   const ring = await getRing();
-  console.log("ring\n", ring);
-  const message = ethers.utils.solidityKeccak256(["string"], [proposal.description]);
+
+  // message = keccak256(abi.encodePacked(proposal description, target, value, callData))
+  const message = ethers.utils.solidityKeccak256(
+    ["string", "address", "uint256", "bytes"],
+    [proposal.description, proposal.target || ethers.constants.AddressZero, proposal.value || 0, proposal.calldata || "0x"]
+  );
 
   const sig = await LSAG_signature(
     ring,
     message,
     userAddress,
-    `${chainId}_dao-of-the-ring_${Date.now()}`,
+    `${chainId}_dao-of-the-ring`
   );
 
-
-  // extract data from sig
   const signature: RingSignature = RingSignature.fromBase64(sig);
 
   const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner(); // todo: use a relay so the user does not leak their address
+  const signer = provider.getSigner(); // Use a relay so the user does not leak their address
 
-  // submit vote
-  let address = "";
+  let address = '';
   switch (chainId) {
     case 10:
       address = GOVERNANCE_CONTRACT["10"];
@@ -71,9 +72,7 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
 
   const contract = new ethers.Contract(
     address,
-    [
-      "function anonProposal(string memory _description, address target, uint256 value, bytes memory callData, uint256[] memory ring, uint256[] memory responses, uint256 c, uint256[2] memory keyImage, string memory linkabilityFlag, uint256[] memory witnesses) public",
-    ],
+    DAOofTheRingABI,
     signer
   );
 
@@ -84,24 +83,18 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
     formattedRing.push(pointRing[i].y);
   }
 
-  // console.log("evmWitnesses:\n", signature.getEvmWitnesses());
-
   const tx = await contract.anonProposal(
-    proposal.description, 
-    proposal.target ?? "0x0000000000000000000000000000000000000000", 
-    proposal.value ?? BigInt(0), 
-    proposal.calldata ?? "0x", 
+    proposal.description,
+    proposal.target || ethers.constants.AddressZero,
+    proposal.value || 0n,
+    proposal.calldata || "0x",
     formattedRing,
-    signature.getResponses(), 
-    signature.getChallenge(), 
-    [
-     signature.getKeyImage().x,
-      signature.getKeyImage().y
-    ],
-    signature.getLinkabilityFlag(), 
+    signature.getResponses(),
+    signature.getChallenge(),
+    [signature.getKeyImage().x, signature.getKeyImage().y],
+    `${chainId}_dao-of-the-ring`,
     signature.getEvmWitnesses()
   );
 
-  // return tx hash
   return (await tx.wait()).transactionHash;
 }
