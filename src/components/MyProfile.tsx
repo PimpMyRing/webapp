@@ -2,22 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { installSnap, getAddresses } from '@cypher-laboratory/alicesring-snap-sdk';
+import { isSbtOwner } from '../utils/isSbtOwner';
 
 const MyProfile: React.FC = () => {
   const [showOnboardingPopup, setShowOnboardingPopup] = useState<boolean>(false);
   const [showConnectMessage, setShowConnectMessage] = useState<boolean>(false);
   const [snapInstalled, setSnapInstalled] = useState<boolean>(false);
   const [ringAddresses, setRingAddresses] = useState<string[]>([]);
-  const [imported, setImported] = useState<boolean>(false);
+  const [displayedMsg, setDisplayedMsg] = useState<{ msg: string, color: string } | null>(null);
+  const [importAccountInSnap, setImportAccountInSnap] = useState<boolean>(false);
   const navigate = useNavigate();
   const { isConnected, address } = useAccount();
 
+
   const checkOnboarding = () => {
+
     const onboarded = localStorage.getItem('onboarded');
     const refusedAt = localStorage.getItem('refusedAt');
     const currentTime = new Date().getTime();
 
     if (onboarded === null || onboarded === 'false') {
+      // checks if the user his a token owner
+      (async () => {
+        if (address && await isSbtOwner(address)) {
+          localStorage.setItem('onboarded', 'true');
+          return;
+        }
+      })();
       if (refusedAt) {
         const refusedTime = new Date(parseInt(refusedAt, 10)).getTime();
         const tenMinutesInMs = 10 * 60 * 1000;
@@ -53,10 +64,15 @@ const MyProfile: React.FC = () => {
     if (isInstalled) {
       setSnapInstalled(true);
       const addresses = await getAddresses();
-      setRingAddresses(addresses);
-      setImported(true);
+      if (addresses.length === 0) {
+        setDisplayedMsg({ msg: 'No addresses found. Either you have no addresses registered in the Snap or an error occurred.', color: 'orange-600' });
+        setImportAccountInSnap(true);
+      } else {
+        setRingAddresses(addresses);
+        setDisplayedMsg({ msg: 'Addresses imported successfully!', color: 'green-600' });
+      }
       setTimeout(() => {
-        setImported(false);
+        setDisplayedMsg(null);
       }, 3000);
     } else {
       setSnapInstalled(false);
@@ -94,11 +110,32 @@ const MyProfile: React.FC = () => {
             >
               Import Ring Addresses
             </button>
-            {imported && (
-              <div className="bg-green-600 text-white rounded-full px-4 py-2 mt-2 text-center">
-                Addresses imported successfully!
+            {displayedMsg && (
+              <div className={`bg-${displayedMsg.color} text-white rounded-full px-4 py-2 mt-2 text-center`}>
+                {displayedMsg.msg}
               </div>
             )}
+            {
+              importAccountInSnap && (
+                <div className="bg-gray-800 text-white rounded-full px-4 py-2 mt-2 text-center">
+                  <p>Would you like to import your account in the Snap?</p>
+                  <div className="flex justify-center space-x-4 mt-2">
+                    {/* <button
+                      className="bg-gray-500 text-white rounded px-4 py-2"
+                      onClick={() => setImportAccountInSnap(false)}
+                    >
+                      Cancel
+                    </button> */}
+                    <button
+                      className="bg-green-600 text-white rounded px-4 py-2"
+                      onClick={() => navigate('/importAccount')}
+                    >
+                      Import Account
+                    </button>
+                  </div>
+                </div>
+              )
+            }
             {showOnboardingPopup && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="bg-white rounded-lg shadow-md p-6 max-w-sm mx-auto">

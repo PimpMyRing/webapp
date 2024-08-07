@@ -1,4 +1,4 @@
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 import { NFT_ADDRESS } from '../constant';
 
 // if th chain id is not 10, 11155420, or 8453, return false and log an error
