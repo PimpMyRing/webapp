@@ -9,7 +9,6 @@ import {
 import { ethers } from 'ethers';
 import { NFT_ADDRESS } from '../constant';
 import { useNavigate } from 'react-router-dom';
-import { newAnonProposal } from '../utils/newProposal';
 
 const OnboardingStep: React.FC = () => {
   const [privacyLevel, setPrivacyLevel] = useState<'full' | 'partial'>('full');

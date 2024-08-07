@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Proposal } from '../utils/types';
 import { fetchProposals } from '../api/apicall';
+import { ethers } from 'ethers';
 
 const MainListing: React.FC = () => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -25,6 +26,25 @@ const MainListing: React.FC = () => {
   };
 
   const handleNewProposalClick = () => {
+    const onboarded = localStorage.getItem('onboarded');
+    let loggedIn = false;
+    try {
+      (async () => {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+        if (address) {
+          loggedIn = true;
+        }
+      })();
+    } catch (error) {
+      alert('You need to be logged-in to create a proposal. Check My Profile section');
+      return;
+    }
+    if (!onboarded || onboarded === 'false') {
+      alert('You need to be onboarded to create a proposal. Check My Profile section');
+      return;
+    }
     navigate('/new-proposal');
   };
 
