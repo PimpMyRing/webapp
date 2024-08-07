@@ -22,7 +22,7 @@ export const fetchProposalById = async (id: string): Promise<Proposal | null> =>
 };
 
 export const fetchDiscussionByProposalId = async (proposalId: string): Promise<Discussion | null> => {
-  const response = await fetch(`${API_BASE_URL}/discussions/${proposalId}`);
+  const response = await fetch(`${API_BASE_URL}discussions/${proposalId}`);
   if (!response.ok) {
     throw new Error('Failed to fetch discussion');
   }

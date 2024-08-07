@@ -3,7 +3,7 @@ import { GOVERNANCE_CONTRACT } from "../constant";
 import { getRing } from "./vote";
 import { ethers } from "ethers";
 import { Point, RingSignature } from "@cypher-laboratory/alicesring-lsag";
-import {DAOofTheRingABI} from "../abi/DAOofTheRing";
+import {GovernanceContractAbi} from "../abi/DAOofTheRing";
 
 export async function newProposal(chainId: number, proposal: { description: string, target?: string, value?: bigint, calldata?: string }): Promise<string> {
 
@@ -72,7 +72,7 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
 
   const contract = new ethers.Contract(
     address,
-    DAOofTheRingABI,
+    GovernanceContractAbi,
     signer
   );
 
