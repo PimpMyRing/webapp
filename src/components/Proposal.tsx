@@ -47,7 +47,7 @@ const ProposalDetail: React.FC = () => {
       console.log('Chain ID:', chainID);
       const txHash = await vote(side, chainID, id, address, privacyLevel);
       console.log('Transaction hash:', txHash);
-      await incrementVoteCount(id); // API should check onchain count btw
+      await incrementVoteCount(id);
     } catch (error: any) {
       setError(error.message);
     } finally {

@@ -5,6 +5,40 @@ import { ethers } from "ethers";
 import { Point, RingSignature } from "@cypher-laboratory/alicesring-lsag";
 import {GovernanceContractAbi} from "../abi/DAOofTheRing";
 
+export async function getProposalCount(chainId: number): Promise<number> {
+  try {
+    // Create an instance of a provider
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    let governanceAddress = "";
+
+    switch (chainId) {
+      case 10:
+        governanceAddress = GOVERNANCE_CONTRACT["10"];
+        break;
+      case 11155420:
+        governanceAddress = GOVERNANCE_CONTRACT["11155420"];
+        break;
+      case 8453:
+        governanceAddress = GOVERNANCE_CONTRACT["8453"];
+        break;
+      default:
+        throw new Error("Unsupported chainId");
+    }
+    
+    // Create an instance of a contract
+    const contract = new ethers.Contract(governanceAddress, GovernanceContractAbi, provider);
+    
+    // Call the proposalCount function
+    const proposalCount = await contract.proposalCount();
+    
+    // Return the proposal count as a number
+    return proposalCount.toNumber();
+  } catch (error) {
+    console.error('Error reading proposal count:', error);
+    throw new Error('Failed to read proposal count.');
+  }
+}
+
 export async function newProposal(chainId: number, proposal: { description: string, target?: string, value?: bigint, calldata?: string }): Promise<string> {
 
   const provider = new ethers.providers.Web3Provider(window.ethereum);

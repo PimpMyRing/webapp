@@ -2,11 +2,10 @@ import { ethers } from "ethers";
 import { LSAG_signature } from "@cypher-laboratory/alicesring-snap-sdk";
 import { Point, RingSignature, sortRing } from "@cypher-laboratory/alicesring-lsag";
 import { GET_RING_URL, GOVERNANCE_CONTRACT } from "../constant";
-import { isProposalOpen } from "./isProposalOpen";
 
 export async function vote(side: boolean, chainId: number, proposalId: string, userAddress: string, privacyLevel: 'full' | 'partial'): Promise<string> {
   const ring = await getRing();
-
+  console.log('Initiating vote for proposalID:', proposalId);
   // message = keccak256(abi.encodePacked(_proposalId))
   const message = ethers.utils.solidityKeccak256(["uint256"], [proposalId]);
 
@@ -49,8 +48,8 @@ export async function vote(side: boolean, chainId: number, proposalId: string, u
     const contract = new ethers.Contract(
       address,
       [
-        'function voteTrue(uint256, uint256[], uint256[], uint256, uint256[2], string, uint256[])',
-        'function voteFalse(uint256, uint256[], uint256[], uint256, uint256[2], string, uint256[])',
+        'function voteTrue(uint256, uint256[], uint256[], uint256, uint256[2], string, uint256[]) external returns (bool)',
+        'function voteFalse(uint256, uint256[], uint256[], uint256, uint256[2], string, uint256[]) external returns (bool)',
       ],
       signer
     );
@@ -62,21 +61,11 @@ export async function vote(side: boolean, chainId: number, proposalId: string, u
       formattedRing.push(pointRing[i].y);
     }
 
-    console.log('tmp:\n', await isProposalOpen(1));
-    console.log('side:', side);
-    console.log('proposalId:', proposalId);
-    console.log('formattedRing:', formattedRing.length);
-    console.log('responses:', signature.getResponses());
-    console.log('challenge:', signature.getChallenge());
-    console.log('keyImage:', [signature.getKeyImage().x, signature.getKeyImage().y]);
-    console.log('linkabilityFlag:', signature.getLinkabilityFlag());
-    console.log('evmWitnesses:', signature.getEvmWitnesses());
-
     const tx = side
-      ? contract.voteTrue(proposalId, formattedRing, signature.getResponses(), signature.getChallenge(), [signature.getKeyImage().x, signature.getKeyImage().y], signature.getLinkabilityFlag(), signature.getEvmWitnesses())
-      : contract.voteFalse(proposalId, formattedRing, signature.getResponses(), signature.getChallenge(), [signature.getKeyImage().x, signature.getKeyImage().y], signature.getLinkabilityFlag(), signature.getEvmWitnesses());
+      ? await contract.voteTrue(proposalId, formattedRing, signature.getResponses(), signature.getChallenge(), [signature.getKeyImage().x, signature.getKeyImage().y], signature.getLinkabilityFlag(), signature.getEvmWitnesses())
+      : await contract.voteFalse(proposalId, formattedRing, signature.getResponses(), signature.getChallenge(), [signature.getKeyImage().x, signature.getKeyImage().y], signature.getLinkabilityFlag(), signature.getEvmWitnesses());
 
-      console.log('Transaction:', tx);
+    console.log('Transaction:', tx);
     return (await tx.wait()).transactionHash;
 
   } catch (error) {

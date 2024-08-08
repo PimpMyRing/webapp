@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Proposal } from '../utils/types';
 import { useAccount } from 'wagmi';
-import { newAnonProposal } from '../utils/newProposal';
+import { newAnonProposal, getProposalCount } from '../utils/newProposal';
 import {
   detectRingSignatureSnap, 
   installSnap
@@ -44,9 +44,11 @@ const ProposalForm: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setTxHash(null);
+    const proposalCount = await getProposalCount(chainId || 1);
+    console.log('Proposal count:', proposalCount);
 
     const newProposal: Proposal = {
-      id: '', // ID will be set by the backend
+      id: proposalCount.toString(),
       title,
       description,
       publicationDate: new Date().toISOString().split('T')[0], // Current date
