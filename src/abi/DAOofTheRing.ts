@@ -97,7 +97,13 @@ export const GovernanceContractAbi = [
       }
     ],
     "name": "anonProposal",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
