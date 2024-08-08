@@ -44,7 +44,8 @@ const ProposalForm: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setTxHash(null);
-    const proposalCount = await getProposalCount(chainId || 1);
+    if(!chainId) throw new Error("No wallet connected");
+    const proposalCount = await getProposalCount(chainId);
     console.log('Proposal count:', proposalCount);
 
     const proposal: Proposal = {
@@ -56,6 +57,8 @@ const ProposalForm: React.FC = () => {
       votes: 0,
       author: isAnonymous ? 'Anon' : address || 'unknown',
     };
+
+    console.log("proposal:\n", proposal);
 
     try {
       if (address && chainId) {
@@ -97,7 +100,7 @@ const ProposalForm: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...newProposal, proposalId: proposalCount }),
+        body: JSON.stringify({ ...proposal, proposalId: proposalCount }),
       });
 
       if (!response.ok) {
@@ -204,7 +207,7 @@ const ProposalForm: React.FC = () => {
           <div className="flex space-x-4">
             <button
               type="button"
-              className="bg-blue-600 text-white rounded px-4 py-2 mt-2"
+              className="bg-grey-600 text-white rounded px-4 py-2 mt-2"
               onClick={handlePublicSubmit}
               disabled={isLoading}
             >
@@ -212,7 +215,7 @@ const ProposalForm: React.FC = () => {
             </button>
             <button
               type="button"
-              className="bg-gray-600 text-white rounded px-4 py-2 mt-2"
+              className="bg-blue-600 text-white rounded px-4 py-2 mt-2"
               onClick={handleAnonymousSubmit}
               disabled={isLoading}
             >

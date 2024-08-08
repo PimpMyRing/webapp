@@ -106,20 +106,20 @@ const ProposalDetail: React.FC = () => {
           {
             voteData !== null && voteData.voted === true &&
             <div>
-              <p>You voted {voteData.side} this proposal</p>
+              <p className="text-white">You voted {voteData.side} this proposal</p>
             </div>
           }
           {(!voteData || (voteData !== null && voteData.voted === false)) &&
             <div>
               <button
-                className="bg-blue-600 text-white rounded px-4 py-2"
+                className="bg-gray-600 text-white rounded px-4 py-2"
                 onClick={() => handleVote(false, JSON.parse(localStorage.getItem(address + "_" + chainId)!).privacyLevel)}
                 disabled={isVoting}
               >
                 Vote against
               </button>
               <button
-                className="bg-gray-600 text-white rounded px-4 py-2"
+                className="bg-blue-600 text-white rounded px-4 py-2"
                 onClick={() => handleVote(true, JSON.parse(localStorage.getItem(address + "_" + chainId)!).privacyLevel)}
                 disabled={isVoting}
               >
