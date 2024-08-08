@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Proposal } from '../utils/types';
 import { useAccount } from 'wagmi';
-import { newAnonProposal, getProposalCount } from '../utils/newProposal';
+import { newAnonProposal, newProposal, getProposalCount } from '../utils/newProposal';
 import {
   detectRingSignatureSnap,
   installSnap
@@ -47,7 +47,7 @@ const ProposalForm: React.FC = () => {
     const proposalCount = await getProposalCount(chainId || 1);
     console.log('Proposal count:', proposalCount);
 
-    const newProposal: Proposal = {
+    const proposal: Proposal = {
       id: proposalCount.toString(),
       title,
       description,
@@ -58,17 +58,28 @@ const ProposalForm: React.FC = () => {
     };
 
     try {
-      if (address) {
-        const result = await newAnonProposal(
-          chainId || 1,
-          address,
-          {
-            description: newProposal.description,
-            target: target || undefined,
-            value: callData ? BigInt(callData) : undefined,
-            calldata: callData || undefined,
-          }
-        );
+      if (address && chainId) {
+        const result = isAnonymous
+          ? await newAnonProposal(
+            chainId,
+            address,
+            {
+              description: proposal.description,
+              target: target || undefined,
+              value: callData ? BigInt(callData) : undefined,
+              calldata: callData || undefined,
+            }
+          )
+          : await newProposal(
+            chainId,
+            {
+              description: proposal.description,
+              target: target || undefined,
+              value: callData ? BigInt(callData) : undefined,
+              calldata: callData || undefined,
+            }
+          );
+
         console.log('Anon proposal result:', result);
         setTxHash(result);
       }
@@ -86,7 +97,7 @@ const ProposalForm: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({...newProposal, proposalId: proposalCount}),
+        body: JSON.stringify({ ...newProposal, proposalId: proposalCount }),
       });
 
       if (!response.ok) {
