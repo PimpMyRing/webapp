@@ -3,7 +3,7 @@ import { Proposal } from '../utils/types';
 import { useAccount } from 'wagmi';
 import { newAnonProposal, getProposalCount } from '../utils/newProposal';
 import {
-  detectRingSignatureSnap, 
+  detectRingSignatureSnap,
   installSnap
 } from '@cypher-laboratory/alicesring-snap-sdk';
 
@@ -80,12 +80,13 @@ const ProposalForm: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3022/api/proposals', {
+      if (!chainId) throw new Error("No chainId found. is you wallet connected ?");
+      const response = await fetch(`http://localhost:3022/api/proposals/${chainId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newProposal),
+        body: JSON.stringify({...newProposal, proposalId: proposalCount}),
       });
 
       if (!response.ok) {

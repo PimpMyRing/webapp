@@ -75,6 +75,8 @@ export async function vote(side: boolean, chainId: number, proposalId: string, u
 }
 
 export async function getRing(): Promise<string[]> {
+  //debug:
+  return [];
   // fetch GET_RING_URL
   const response = await fetch(GET_RING_URL);
   

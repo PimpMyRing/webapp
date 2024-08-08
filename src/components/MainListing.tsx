@@ -11,8 +11,13 @@ const MainListing: React.FC = () => {
   useEffect(() => {
     const getProposals = async () => {
       try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const chainId = (await provider.getNetwork()).chainId;
+        if (chainId != 10 && chainId != 8453 && chainId != 11155420) {
+          throw new Error('Invalid chainId');
+        }
         const data = await fetchProposals();
-        setProposals(data);
+        setProposals(data[chainId]);
       } catch (error) {
         console.error('Error fetching data:', error);
       }

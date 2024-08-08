@@ -1,9 +1,10 @@
 import { Proposal, Discussion } from '../utils/types';
 import { API_URL } from "../constant";
+import { ethers } from "ethers"
 
 const API_BASE_URL = API_URL;
 
-export const fetchProposals = async (): Promise<Proposal[]> => {
+export const fetchProposals = async (): Promise<{ "10": Proposal[], "8453": Proposal[], "11155420": Proposal[] }> => {
   const response = await fetch(`${API_BASE_URL}/proposals`);
   if (!response.ok) {
     throw new Error('Failed to fetch proposals');
@@ -13,7 +14,13 @@ export const fetchProposals = async (): Promise<Proposal[]> => {
 };
 
 export const fetchProposalById = async (id: string): Promise<Proposal | null> => {
-  const response = await fetch(`${API_BASE_URL}/proposals/${id}`);
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const chainId = (await provider.getNetwork()).chainId;
+  if (chainId != 10 && chainId != 8453 && chainId != 11155420) {
+    throw new Error('Invalid chainId');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/proposals/${chainId}/${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch proposal');
   }
@@ -22,7 +29,12 @@ export const fetchProposalById = async (id: string): Promise<Proposal | null> =>
 };
 
 export const fetchDiscussionByProposalId = async (proposalId: string): Promise<Discussion | null> => {
-  const response = await fetch(`${API_BASE_URL}discussions/${proposalId}`);
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const chainId = (await provider.getNetwork()).chainId;
+  if (chainId != 10 && chainId != 8453 && chainId != 11155420) {
+    throw new Error('Invalid chainId');
+  }
+  const response = await fetch(`${API_BASE_URL}discussions/${chainId}/${proposalId}`);
   if (!response.ok) {
     throw new Error('Failed to fetch discussion');
   }
@@ -34,7 +46,13 @@ export const fetchDiscussionByProposalId = async (proposalId: string): Promise<D
 };
 
 export const submitProposal = async (newProposal: Proposal): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/proposals`, {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const chainId = (await provider.getNetwork()).chainId;
+  if (chainId != 10 && chainId != 8453 && chainId != 11155420) {
+    throw new Error('Invalid chainId');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/proposals/${chainId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -48,7 +66,12 @@ export const submitProposal = async (newProposal: Proposal): Promise<void> => {
 };
 
 export const incrementVoteCount = async (proposalId: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/proposals/${proposalId}/vote`, {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const chainId = (await provider.getNetwork()).chainId;
+  if (chainId != 10 && chainId != 8453 && chainId != 11155420) {
+    throw new Error('Invalid chainId');
+  }
+  const response = await fetch(`${API_BASE_URL}/proposals/${chainId}/${proposalId}/vote`, {
     method: 'PATCH',
   });
 
