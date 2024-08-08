@@ -207,7 +207,7 @@ const ProposalForm: React.FC = () => {
           <div className="flex space-x-4">
             <button
               type="button"
-              className="bg-grey-600 text-white rounded px-4 py-2 mt-2"
+              className="bg-gray-600 text-white rounded px-4 py-2 mt-2"
               onClick={handlePublicSubmit}
               disabled={isLoading}
             >
