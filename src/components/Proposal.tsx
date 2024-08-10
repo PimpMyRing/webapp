@@ -13,25 +13,23 @@ const ProposalDetail: React.FC = () => {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isVoting, setIsVoting] = useState<boolean>(false);
-  const { address } = useAccount();
-  const { chainId } = useAccount();
-  const [voteData, setVoteData] = useState<{ voted: boolean, side: string } | null>(null)
+  const { address, chainId } = useAccount();
+  const [voteData, setVoteData] = useState<{ voted: boolean, side: string } | null>(null);
 
   useEffect(() => {
-    // check if user has already voted
+    // Check if user has already voted
     try {
-      if (proposal) {
-        const vote = localStorage.getItem(address + "_" + chainId + "_" + proposal.id);
-
+      if (proposal && address && chainId) {
+        const vote = localStorage.getItem(`${address}_${chainId}_${proposal.id}`);
         if (vote !== null) {
           const voteObj = JSON.parse(vote);
-          setVoteData({ voted: voteObj.voted, side: voteObj.side })
+          setVoteData({ voted: voteObj.voted, side: voteObj.side });
         }
       }
     } catch (e) {
-
+      console.error("Error checking vote:", e);
     }
-  }, []);
+  }, [proposal, address, chainId]);
 
   useEffect(() => {
     const getProposal = async () => {
@@ -64,12 +62,12 @@ const ProposalDetail: React.FC = () => {
       const txHash = await vote(side, chainID, id, address, privacyLevel);
       console.log('Transaction hash:', txHash);
       await incrementVoteCount(id);
-      localStorage.setItem(address + "_" + chainId + "_" + proposal?.id, JSON.stringify({ voted: true, side: side }));
+      localStorage.setItem(`${address}_${chainId}_${proposal?.id}`, JSON.stringify({ voted: true, side: side ? 'for' : 'against' }));
+      setVoteData({ voted: true, side: side ? 'for' : 'against' });
     } catch (error: any) {
       setError(error.message);
     } finally {
       setIsVoting(false);
-      setVoteData({ voted: true, side: side ? 'for' : 'against' });
     }
   };
 
@@ -103,30 +101,42 @@ const ProposalDetail: React.FC = () => {
           </div>
         </div>
         <div className="flex justify-center space-x-4 mb-4">
-          {
-            voteData !== null && voteData.voted === true &&
+          {voteData?.voted ? (
             <div>
               <p className="text-white">You voted {voteData.side} this proposal</p>
             </div>
-          }
-          {(!voteData || (voteData !== null && voteData.voted === false)) &&
+          ) : (
             <div>
               <button
                 className="bg-gray-600 text-white rounded px-4 py-2"
-                onClick={() => handleVote(false, JSON.parse(localStorage.getItem(address + "_" + chainId)!).privacyLevel)}
+                onClick={() => handleVote(false, JSON.parse(localStorage.getItem(`${address}_${chainId}`)!).privacyLevel)}
                 disabled={isVoting}
               >
-                Vote against
+                {isVoting && !voteData ? (
+                  <div className="flex items-center">
+                    <div className="border-t-4 border-b-4 border-white rounded-full w-4 h-4 animate-spin mr-2"></div>
+                    Voting...
+                  </div>
+                ) : (
+                  "Vote against"
+                )}
               </button>
               <button
                 className="bg-blue-600 text-white rounded px-4 py-2"
-                onClick={() => handleVote(true, JSON.parse(localStorage.getItem(address + "_" + chainId)!).privacyLevel)}
+                onClick={() => handleVote(true, JSON.parse(localStorage.getItem(`${address}_${chainId}`)!).privacyLevel)}
                 disabled={isVoting}
               >
-                Vote in favor
+                {isVoting && !voteData ? (
+                  <div className="flex items-center">
+                    <div className="border-t-4 border-b-4 border-white rounded-full w-4 h-4 animate-spin mr-2"></div>
+                    Voting...
+                  </div>
+                ) : (
+                  "Vote in favor"
+                )}
               </button>
             </div>
-          }
+          )}
         </div>
         {error && <p className="text-red-500">{error}</p>}
       </div>

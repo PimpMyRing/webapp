@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { fetchDiscussionByProposalId, postMessage } from '../api/apicall';
 import type { Discussion as DiscussionType, Message } from '../utils/types';
+import { submitMessageRing } from '../utils/submitMessage';
+import { useAccount } from 'wagmi';
 
 interface DiscussionProps {
   proposalId: string;
@@ -13,6 +15,7 @@ const Discussion: React.FC<DiscussionProps> = ({ proposalId, chainId }) => {
   const [error, setError] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState<string>(''); // State to hold the new message
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // State to handle submission status
+  const { address } = useAccount();
 
   useEffect(() => {
     const getDiscussion = async () => {
@@ -41,12 +44,20 @@ const Discussion: React.FC<DiscussionProps> = ({ proposalId, chainId }) => {
     try {
       const newMessageObject: Omit<Message, 'id'> = {
         body: newMessage,
-        sender: 'You', // Replace with actual sender's name or address
+        sender: 'Anon Ring Member',
         date: new Date().toISOString(),
       };
+      const result= await submitMessageRing(proposalId,address ||'', 'full', newMessage);
+      if(result)
+      {
+        await postMessage(proposalId, newMessageObject);
 
-      await postMessage(proposalId, newMessageObject);
+      }
+      else {
+        throw new Error("Failed to sign the message.");
+      }
 
+      
       setDiscussion(prev => {
         if (prev) {
           return {
