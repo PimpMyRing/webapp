@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { fetchDiscussionByProposalId } from '../api/apicall';
-import type { Discussion as DiscussionType } from '../utils/types';
-import { FaThumbsUp } from 'react-icons/fa'; // Importing the thumbs up icon
+import { fetchDiscussionByProposalId, postMessage } from '../api/apicall';
+import type { Discussion as DiscussionType, Message } from '../utils/types';
 
 interface DiscussionProps {
   proposalId: string;
+  chainId: string;
 }
 
-const Discussion: React.FC<DiscussionProps> = ({ proposalId }) => {
+const Discussion: React.FC<DiscussionProps> = ({ proposalId, chainId }) => {
   const [discussion, setDiscussion] = useState<DiscussionType | null>(null);
   const [isEmpty, setIsEmpty] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [newMessage, setNewMessage] = useState<string>(''); // State to hold the new message
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // State to handle submission status
 
   useEffect(() => {
     const getDiscussion = async () => {
       try {
         const data = await fetchDiscussionByProposalId(proposalId);
-        if (data === null) {
+        if (data === null || data.messages.length === 0) {
           setIsEmpty(true);
         } else {
           setDiscussion(data);
@@ -27,16 +29,44 @@ const Discussion: React.FC<DiscussionProps> = ({ proposalId }) => {
     };
 
     getDiscussion();
-  }, [proposalId]);
+  }, [proposalId, chainId]);
 
-  const handleLike = (messageId: number) => {
-    console.log(`Liked message with ID: ${messageId}`);
-    // Implement the logic to like a message, possibly updating state or sending an API request
-  };
+  const handleAddMessage = async () => {
+    if (newMessage.trim() === '') {
+      setError('Message cannot be empty.');
+      return;
+    }
+    setIsSubmitting(true);
 
-  const handleAddMessage = () => {
-    console.log('Adding a new message');
-    // Implement the logic to add a new message
+    try {
+      const newMessageObject: Omit<Message, 'id'> = {
+        body: newMessage,
+        sender: 'You', // Replace with actual sender's name or address
+        date: new Date().toISOString(),
+      };
+
+      await postMessage(proposalId, newMessageObject);
+
+      setDiscussion(prev => {
+        if (prev) {
+          return {
+            ...prev,
+            messages: [...prev.messages, { ...newMessageObject, id: prev.messages.length + 1 }],
+          };
+        }
+        return {
+          proposalId,
+          messages: [{ ...newMessageObject, id: 1 }],
+        };
+      });
+
+      setNewMessage(''); // Clear the input field after submission
+      setIsEmpty(false); // No longer empty after posting a message
+      setIsSubmitting(false);
+    } catch (error) {
+      setError('Failed to submit the message.');
+      setIsSubmitting(false);
+    }
   };
 
   if (error) {
@@ -51,9 +81,26 @@ const Discussion: React.FC<DiscussionProps> = ({ proposalId }) => {
 
   if (isEmpty) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-blue-600 text-white rounded-full px-4 py-2">
-          No messages in this discussion.
+      <div className="bg-gray-800 rounded-lg shadow-md p-6 mt-6">
+        <h3 className="text-2xl font-semibold text-white mb-4">Discussion</h3>
+        <div className="text-gray-400 mb-4">No messages in this discussion. Be the first to post a message!</div>
+        <div className="mt-6">
+          <textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            className="w-full p-2 rounded bg-gray-700 text-white mb-4"
+            placeholder="Write your message here..."
+            rows={4}
+          />
+          <div className="flex justify-center">
+            <button
+              onClick={handleAddMessage}
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Add Message'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -71,28 +118,27 @@ const Discussion: React.FC<DiscussionProps> = ({ proposalId }) => {
                   <p className="text-sm text-gray-500">{message.date}</p>
                   <p className="text-white">{message.body}</p>
                   <p className="text-sm text-gray-500 text-right">- {message.sender}</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => handleLike(message.id)}
-                        className="flex items-center bg-transparent text-white hover:text-blue-500"
-                      >
-                        <FaThumbsUp className="mr-1" /> {message.likes}
-                      </button>
-                    </div>
-                    {/* Additional reaction buttons can be added here */}
-                  </div>
                 </div>
               </li>
             ))}
           </ul>
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={handleAddMessage}
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Add Message
-            </button>
+          <div className="mt-6">
+            <textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              className="w-full p-2 rounded bg-gray-700 text-white mb-4"
+              placeholder="Write your message here..."
+              rows={4}
+            />
+            <div className="flex justify-center">
+              <button
+                onClick={handleAddMessage}
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Submitting...' : 'Add Message'}
+              </button>
+            </div>
           </div>
         </>
       ) : (

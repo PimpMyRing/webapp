@@ -130,7 +130,7 @@ const ProposalDetail: React.FC = () => {
         </div>
         {error && <p className="text-red-500">{error}</p>}
       </div>
-      <Discussion proposalId={proposal.id} />
+      <Discussion proposalId={proposal.id} chainId={chainId?.toString() || "1"} />
     </div>
   );
 };

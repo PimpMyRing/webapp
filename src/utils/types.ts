@@ -14,7 +14,6 @@ export interface Message {
   body: string;
   sender: string;
   date: string;
-  likes: number;
   id: number;
 }
 
