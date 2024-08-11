@@ -48,7 +48,7 @@ The primary goal of the backend is to serve the frontend with the necessary data
 
 ## DEMO :
 
-[![IMAGE ALT TEXT](https://img.youtube.com/vi/RMPiLqEJ7Fw/0.jpg)](https://youtu.be/RMPiLqEJ7Fw)
+Watch the live demo video [here](https://youtu.be/RMPiLqEJ7Fw)
 
 To use the demo version of Ring DAO you can interact with our app : [daoofthering.cypherlab.org](https://daoofthering.cypherlab.org/)  
 You NEED to install Metamask in order to use our homemade SNAP, see [MetaMask Snap](https://snaps.metamask.io/snap/npm/cypher-laboratory/alicesring-snap/)  
