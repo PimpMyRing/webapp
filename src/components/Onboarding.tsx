@@ -114,6 +114,7 @@ const OnboardingStep: React.FC = () => {
       setKeyImage(keyImage);
       // if the user already owns a nft, skip ,the mint phase
       if (await isSbtOwner(metaMaskAddress)) {
+        localStorage.setItem(metaMaskAddress + "_" + chainId.chainId, JSON.stringify({ privacyLevel, keyImage }));
         setStep(6);
       } else {
         setStep(5);
