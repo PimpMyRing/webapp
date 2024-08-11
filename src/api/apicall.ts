@@ -5,7 +5,8 @@ import { ethers } from "ethers"
 const API_BASE_URL = API_URL;
 
 export const fetchProposals = async (): Promise<{ "10": Proposal[], "8453": Proposal[], "11155420": Proposal[] }> => {
-  const response = await fetch(`${API_BASE_URL}/proposals`);
+  const response = await fetch(`${API_BASE_URL}proposals`);
+  console.log('response:', response);
   if (!response.ok) {
     throw new Error('Failed to fetch proposals');
   }

@@ -51,8 +51,6 @@ export async function submitMessageRing( proposalId: string, userAddress: string
 }
 
 export async function getRing(): Promise<string[]> {
-  //debug:
-  return [];
   // fetch GET_RING_URL
   const response = await fetch(GET_RING_URL);
   

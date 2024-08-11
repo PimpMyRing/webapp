@@ -70,7 +70,7 @@ export async function newProposal(chainId: number, proposal: { description: stri
 
 
 export async function newAnonProposal(chainId: number, userAddress: string, proposal: { description: string, target?: string, value?: bigint, calldata?: string }): Promise<string> {
-  const ring = await getRing();
+  const ring = chainId !== 8453 ? await getRing() : [];
 
   // message = keccak256(abi.encodePacked(proposal description, target, value, callData))
   const message = ethers.utils.solidityKeccak256(

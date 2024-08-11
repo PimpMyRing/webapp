@@ -17,6 +17,7 @@ const MainListing: React.FC = () => {
           throw new Error('Invalid chainId');
         }
         const data = await fetchProposals();
+        console.log('Data:\n', data);
         setProposals(data[chainId]);
       } catch (error) {
         console.error('Error fetching data:', error);

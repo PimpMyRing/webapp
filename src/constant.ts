@@ -1,16 +1,16 @@
-export const API_URL = "http://localhost:3022/api/";
+export const API_URL = "https://api.daoofthering.cypherlab.org/api/"; // "http://localhost:3022/api/";
 export const GET_RING_URL = `${API_URL}ring`
 
 export const NFT_ADDRESS = {
-  "optimism_sepolia": "0xA8F21b08ba05985141b95C7EB0DA3C4aB645FCE1",
-  "optimism": "0x420",
-  "base": "0x69",
+  "optimism_sepolia": "0x005519c6d1569d875f3db28fd7d40b73a235ce18",
+  "optimism": "0xc5Bc1b10671d2Db2734EC81edc7320f61D8CC4A1",
+  "base": "0xFeaa7962b200695D411F38C13B330Df855D12f59",
 }
 
 export const GOVERNANCE_CONTRACT = {
-  "10": "0x420", // op
-  "11155420": "0x4A3d52198d3d36A7cA60133c9A8260d657E6A320", // op sepolia
-  "8453": "0x420", // base
+  "10": "0xF0d7935a33b6126115D21Ec49403e4ce378A42Dd", // op
+  "11155420": "0xfA41c676566422887f29FD095Fb8E8FdB2396548", // op sepolia
+  "8453": "0x7a8a5b5Fd0880DF2118c3360D9c013dDA754FacF", // base
 }
 
 const ALCHEMY_API_KEY = process.env.REACT_APP_ALCHEMY_API_KEY;

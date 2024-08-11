@@ -6,6 +6,7 @@ import {
   detectRingSignatureSnap,
   installSnap
 } from '@cypher-laboratory/alicesring-snap-sdk';
+import { API_URL } from '../constant';
 
 const ProposalForm: React.FC = () => {
   const [title, setTitle] = useState<string>('');
@@ -44,7 +45,7 @@ const ProposalForm: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setTxHash(null);
-    if(!chainId) throw new Error("No wallet connected");
+    if (!chainId) throw new Error("No wallet connected");
     const proposalCount = await getProposalCount(chainId);
     console.log('Proposal count:', proposalCount);
 
@@ -61,31 +62,31 @@ const ProposalForm: React.FC = () => {
     console.log("proposal:\n", proposal);
 
     // try {
-      if (address && chainId) {
-        const result = isAnonymous
-          ? await newAnonProposal(
-            chainId,
-            address,
-            {
-              description: proposal.description,
-              target: target || undefined,
-              value: callData ? BigInt(callData) : undefined,
-              calldata: callData || undefined,
-            }
-          )
-          : await newProposal(
-            chainId,
-            {
-              description: proposal.description,
-              target: target || undefined,
-              value: callData ? BigInt(callData) : undefined,
-              calldata: callData || undefined,
-            }
-          );
+    if (address && chainId) {
+      const result = isAnonymous
+        ? await newAnonProposal(
+          chainId,
+          address,
+          {
+            description: proposal.description,
+            target: target || undefined,
+            value: callData ? BigInt(callData) : undefined,
+            calldata: callData || undefined,
+          }
+        )
+        : await newProposal(
+          chainId,
+          {
+            description: proposal.description,
+            target: target || undefined,
+            value: callData ? BigInt(callData) : undefined,
+            calldata: callData || undefined,
+          }
+        );
 
-        console.log('Anon proposal result:', result);
-        setTxHash(result);
-      }
+      console.log('Anon proposal result:', result);
+      setTxHash(result);
+    }
     // } catch (error) {
     //   console.error('Failed to submit anon proposal:', error);
     //   setError('Failed to submit anon proposal.');
@@ -95,7 +96,7 @@ const ProposalForm: React.FC = () => {
 
     try {
       if (!chainId) throw new Error("No chainId found. is you wallet connected ?");
-      const response = await fetch(`http://localhost:3022/api/proposals/${chainId}`, {
+      const response = await fetch(`${API_URL}proposals/${chainId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

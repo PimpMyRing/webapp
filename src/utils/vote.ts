@@ -4,7 +4,7 @@ import { Point, RingSignature, sortRing } from "@cypher-laboratory/alicesring-ls
 import { GET_RING_URL, GOVERNANCE_CONTRACT } from "../constant";
 
 export async function vote(side: boolean, chainId: number, proposalId: string, userAddress: string, privacyLevel: 'full' | 'partial'): Promise<string> {
-  const ring = await getRing();
+  const ring = chainId !== 8453 ? await getRing() : [];
   console.log('Initiating vote for proposalID:', proposalId);
   // message = keccak256(abi.encodePacked(_proposalId))
   const message = ethers.utils.solidityKeccak256(["uint256"], [proposalId]);
@@ -75,8 +75,6 @@ export async function vote(side: boolean, chainId: number, proposalId: string, u
 }
 
 export async function getRing(): Promise<string[]> {
-  //debug:
-  return [];
   // fetch GET_RING_URL
   const response = await fetch(GET_RING_URL);
   
