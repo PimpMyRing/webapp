@@ -39,7 +39,11 @@ const MyProfile: React.FC = () => {
       }
       const chainId = (await provider.request({ method: 'eth_chainId' })).toString();
       console.log('chainId:', chainId);
-
+      const storedData = localStorage.getItem(`${address}_${BigInt(chainId)}`);
+      if(storedData) {
+        setShowOnboardingPopup(false);
+        return;
+      }
       const onboarded = localStorage.getItem('onboarded' + chainId);
       const refusedAt = localStorage.getItem('refusedAt');
       const currentTime = new Date().getTime();

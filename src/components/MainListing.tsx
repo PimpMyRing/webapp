@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Proposal } from '../utils/types';
 import { fetchProposals } from '../api/apicall';
 import { ethers } from 'ethers';
+import { useAccount } from 'wagmi';
 
 const MainListing: React.FC = () => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const navigate = useNavigate();
+  const { address } = useAccount();
 
   const handleChainChanged = () => {
     console.log(`Network changed`);
@@ -46,8 +48,17 @@ const MainListing: React.FC = () => {
     navigate(`/proposals/${id}`);
   };
 
-  const handleNewProposalClick = () => {
-    const onboarded = localStorage.getItem('onboarded');
+  const handleNewProposalClick = async () => {
+    // get address from the provider
+    const provider = window.ethereum;
+    if (!provider) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    const chainId = await provider.request({ method: 'eth_chainId' });
+    console.log('chainId:', chainId);
+    const onboarded = localStorage.getItem(address + '_' + BigInt(chainId));
     let loggedIn = false;
     try {
       (async () => {

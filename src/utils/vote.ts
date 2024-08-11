@@ -61,6 +61,7 @@ export async function vote(side: boolean, chainId: number, proposalId: string, u
 
     const formattedRing: bigint[] = [];
     const pointRing = signature.getRing();
+    console.log("pointRing: ", pointRing.map((point) => point.toEthAddress()));
     for (let i = 0; i < pointRing.length; i++) {
       formattedRing.push(pointRing[i].x);
       formattedRing.push(pointRing[i].y);
@@ -117,6 +118,9 @@ export async function vote(side: boolean, chainId: number, proposalId: string, u
 }
 
 export async function getRing(): Promise<string[]> {
+
+  // debug: return a fixed ring
+  return [];
   // fetch GET_RING_URL
   const response = await fetch(GET_RING_URL);
 
