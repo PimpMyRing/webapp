@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  SECRET_ALCHEMY_API_KEY: ${{ secrets.SECRET_ALCHEMY_API_KEY }}
+  SECRET_ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
   SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
   SSH_USER: ${{ secrets.EC2_USERNAME }}
   SSH_HOST: ${{ secrets.EC2_URL }}
