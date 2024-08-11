@@ -20,7 +20,7 @@ export const fetchProposalById = async (id: string): Promise<Proposal | null> =>
     throw new Error('Invalid chainId');
   }
 
-  const response = await fetch(`${API_BASE_URL}/proposals/${chainId}/${id}`);
+  const response = await fetch(`${API_BASE_URL}proposals/${chainId}/${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch proposal');
   }

@@ -29,4 +29,4 @@ EXPOSE 3000
 RUN yarn build
 
 # Set the command to start the React application using the build folder
-CMD ["yarn", "serve", "-s", "build", "-l", "3000"]
+CMD ["yarn", "serve", "-s", "build", "-l", "8080"]
