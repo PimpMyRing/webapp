@@ -13,7 +13,7 @@ export const GOVERNANCE_CONTRACT = {
   "8453": "0x7a8a5b5Fd0880DF2118c3360D9c013dDA754FacF", // base
 }
 
-const ALCHEMY_API_KEY = process.env.REACT_APP_ALCHEMY_API_KEY;
+const ALCHEMY_API_KEY = "RuW3M-sKKB2IOPgalS76_EnjArmTW5X8"; // process.env.REACT_APP_ALCHEMY_API_KEY;
 
 export const ALCHEMY_URL = {
   "10": `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,

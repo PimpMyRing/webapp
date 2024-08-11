@@ -16,29 +16,38 @@ const MyProfile: React.FC = () => {
 
 
   const checkOnboarding = () => {
+    if(!address) return;
+    (async () => {
+      // get chainId from the provider
+      const provider = window.ethereum;
+      if (!provider) {
+        return;
+      }
+      const chainId = (await provider.request({ method: 'eth_chainId' })).toString();
+      console.log('chainId:', chainId);
 
-    const onboarded = localStorage.getItem('onboarded');
-    const refusedAt = localStorage.getItem('refusedAt');
-    const currentTime = new Date().getTime();
-
-    if (onboarded === null || onboarded === 'false') {
-      // checks if the user his a token owner
-      (async () => {
-        if (address && await isSbtOwner(address)) {
-          localStorage.setItem('onboarded', 'true');
-          return;
-        }
-      })();
-      if (refusedAt) {
-        const refusedTime = new Date(parseInt(refusedAt, 10)).getTime();
-        const tenMinutesInMs = 10 * 60 * 1000;
-        if (currentTime - refusedTime > tenMinutesInMs) {
+      const onboarded = localStorage.getItem('onboarded' + chainId);
+      const refusedAt = localStorage.getItem('refusedAt');
+      const currentTime = new Date().getTime();
+      console.log('onboarded:', onboarded);
+      if (onboarded === null || onboarded === 'false') {
+        // checks if the user his a token owner
+        console.log("is owner ? ", await isSbtOwner(address));
+          if (address && await isSbtOwner(address)) {            
+            localStorage.setItem('onboarded' + chainId, 'true');
+            return;
+          }
+        if (refusedAt) {
+          const refusedTime = new Date(parseInt(refusedAt, 10)).getTime();
+          const tenMinutesInMs = 10 * 60 * 1000;
+          if (currentTime - refusedTime > tenMinutesInMs) {
+            setShowOnboardingPopup(true);
+          }
+        } else {
           setShowOnboardingPopup(true);
         }
-      } else {
-        setShowOnboardingPopup(true);
       }
-    }
+    })();
   };
 
   useEffect(() => {
@@ -50,7 +59,13 @@ const MyProfile: React.FC = () => {
   }, [isConnected]);
 
   const handleJoinDao = () => {
-    localStorage.setItem('onboarded', 'true');
+    const provider = window.ethereum;
+    if (!provider) {
+      return;
+    }
+    const chainId = (provider.request({ method: 'eth_chainId' })).toString();
+
+    localStorage.setItem('onboarded' + chainId, 'true');
     navigate('/newMember');
   };
 
@@ -89,11 +104,11 @@ const MyProfile: React.FC = () => {
             You must connect first before checking your profile
           </div>
         )}
-        {isConnected && (
+        {(isConnected) && (
           <>
             <p className="text-white mb-4"><strong>Main Wallet:</strong> {address}</p>
             <div className="text-white mb-4">
-              <strong>Ring Addresses:</strong>
+              <strong>Your Addresses:</strong>
               {ringAddresses.length > 0 ? (
                 <ul className="list-disc list-inside">
                   {ringAddresses.map((ringAddress, index) => (
@@ -101,14 +116,14 @@ const MyProfile: React.FC = () => {
                   ))}
                 </ul>
               ) : (
-                <p>No Ring Addresses found.</p>
+                <p>No addresses found.</p>
               )}
             </div>
             <button
               className="bg-blue-600 text-white rounded px-4 py-2 mt-2"
               onClick={handleImportAddresses}
             >
-              Import Ring Addresses
+              Import Addresses
             </button>
             {displayedMsg && (
               <div className={`bg-${displayedMsg.color} text-white rounded-full px-4 py-2 mt-2 text-center`}>

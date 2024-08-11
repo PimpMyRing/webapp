@@ -8,6 +8,21 @@ const MainListing: React.FC = () => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const navigate = useNavigate();
 
+  const handleChainChanged = () => {
+    console.log(`Network changed`);
+    // Reload the page to ensure the app uses the new network
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    const ethereum = window.ethereum as any;
+    ethereum.on('chainChanged', handleChainChanged);
+
+    return () => {
+      ethereum.off('chainChanged', handleChainChanged);
+    };
+  });
+
   useEffect(() => {
     const getProposals = async () => {
       try {

@@ -2,9 +2,10 @@ import { LSAG_signature } from "@cypher-laboratory/alicesring-snap-sdk";
 import { ALCHEMY_URL, GOVERNANCE_CONTRACT } from "../constant";
 import { getRing } from "./vote";
 import { ethers } from "ethers";
-import { Point, RingSignature } from "@cypher-laboratory/alicesring-lsag";
+import { RingSignature } from "@cypher-laboratory/alicesring-lsag";
 import { GovernanceContractAbi } from "../abi/DAOofTheRing";
 import { smartAccountClient } from "../alchemy-aa";
+import { keccak_256 } from "@cypher-laboratory/alicesring-lsag/dist/src/utils";
 
 export async function getProposalCount(chainId: number): Promise<number> {
   try {
@@ -63,7 +64,7 @@ export async function newProposal(chainId: number, proposal: { description: stri
 
   const contract = new ethers.Contract(governanceAddress, ["function newProposal(string memory _description, address target, uint256 value, bytes memory callData) public"], signer);
 
-  const tx = await contract.newProposal(proposal.description, proposal.target ?? "0x0000000000000000000000000000000000000000", proposal.value ?? BigInt(0), proposal.calldata ?? "0x");
+  const tx = await contract.newProposal(keccak_256([proposal.description]), proposal.target ?? "0x0000000000000000000000000000000000000000", proposal.value ?? BigInt(0), proposal.calldata ?? "0x");
 
   return (await tx.wait()).transactionHash;
 };
@@ -135,7 +136,7 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
   const callData = contract.interface.encodeFunctionData(
     "anonProposal",
     [
-      proposal.description,
+      keccak_256([proposal.description]),
       proposal.target || ethers.constants.AddressZero,
       proposal.value || 0n,
       proposal.calldata || "0x",
@@ -149,11 +150,11 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
   );
 
   const smartAccount = await smartAccountClient(chainId.toString() as "10" | "11155420" | "8453");
-  console.log("contract address: ", contract.address);
+  // console.log("contract address: ", contract.address);
   const result = await smartAccount.sendUserOperation({
     uo: { target: contract.address as `0x${string}`, data: callData as `0x${string}`, value: BigInt(0) },
   });
-
+  // console.log("result: ", result);
   // get the actual txHash
   const alchemyProvider = new ethers.providers.JsonRpcProvider(ALCHEMY_URL[chainId.toString() as "10" | "11155420" | "8453"]);
   let cpt = 0;
