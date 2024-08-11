@@ -23,7 +23,7 @@ RUN yarn install --frozen-lockfile && yarn cache clean
 COPY . .
 
 # Expose port 3000
-EXPOSE 3000
+EXPOSE 8080
 
 # Build the React application
 RUN yarn build
