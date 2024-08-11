@@ -1,6 +1,7 @@
 import { createLightAccountClient } from "@alchemy/aa-accounts";
 import { base, LocalAccountSigner, optimism, optimismSepolia } from "@alchemy/aa-core";
 import { http } from "viem";
+import { ALCHEMY_URL } from "../constant";
 
 const chains = {
   "10": optimism, // op
@@ -9,7 +10,7 @@ const chains = {
 }
 
 export const smartAccountClient = async (chainId: "10" | "11155420" | "8453") => await createLightAccountClient({
-  transport: http("https://opt-sepolia.g.alchemy.com/v2/RuW3M-sKKB2IOPgalS76_EnjArmTW5X8") as any,
+  transport: http(ALCHEMY_URL[chainId]) as any,
   chain: chains[chainId],
   account: {
     signer: LocalAccountSigner.privateKeyToAccountSigner(
@@ -25,8 +26,8 @@ export const smartAccountClient = async (chainId: "10" | "11155420" | "8453") =>
 
 // console.log("account address: ", smartAccountClient.account.address); // 0xb6a927118F2C45Db1EF912Cb4E01A14A81D89029
 
-const result = await (await smartAccountClient("11155420")).sendUserOperation({
-  uo: { target: "0x808a3fa3cb908eea383dd083962a820282758d79", data: "0x", value: BigInt(0) },
-});
+// const result = await (await smartAccountClient("11155420")).sendUserOperation({
+//   uo: { target: "0x808a3fa3cb908eea383dd083962a820282758d79", data: "0x", value: BigInt(0) },
+// });
 
 // console.log(result);

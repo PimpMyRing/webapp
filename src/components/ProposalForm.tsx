@@ -60,7 +60,7 @@ const ProposalForm: React.FC = () => {
 
     console.log("proposal:\n", proposal);
 
-    try {
+    // try {
       if (address && chainId) {
         const result = isAnonymous
           ? await newAnonProposal(
@@ -86,12 +86,12 @@ const ProposalForm: React.FC = () => {
         console.log('Anon proposal result:', result);
         setTxHash(result);
       }
-    } catch (error) {
-      console.error('Failed to submit anon proposal:', error);
-      setError('Failed to submit anon proposal.');
-      setIsLoading(false);
-      return;
-    }
+    // } catch (error) {
+    //   console.error('Failed to submit anon proposal:', error);
+    //   setError('Failed to submit anon proposal.');
+    //   setIsLoading(false);
+    //   return;
+    // }
 
     try {
       if (!chainId) throw new Error("No chainId found. is you wallet connected ?");

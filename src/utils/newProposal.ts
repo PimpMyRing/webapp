@@ -1,5 +1,5 @@
 import { LSAG_signature } from "@cypher-laboratory/alicesring-snap-sdk";
-import { GOVERNANCE_CONTRACT } from "../constant";
+import { ALCHEMY_URL, GOVERNANCE_CONTRACT } from "../constant";
 import { getRing } from "./vote";
 import { ethers } from "ethers";
 import { Point, RingSignature } from "@cypher-laboratory/alicesring-lsag";
@@ -149,18 +149,19 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
   );
 
   const smartAccount = await smartAccountClient(chainId.toString() as "10" | "11155420" | "8453");
-
+  console.log("contract address: ", contract.address);
   const result = await smartAccount.sendUserOperation({
-    uo: { target: contract.address as `0x${string}`, data: "0x", value: BigInt(0) },
+    uo: { target: contract.address as `0x${string}`, data: callData as `0x${string}`, value: BigInt(0) },
   });
 
   // get the actual txHash
+  const alchemyProvider = new ethers.providers.JsonRpcProvider(ALCHEMY_URL[chainId.toString() as "10" | "11155420" | "8453"]);
   let cpt = 0;
   do {
     cpt++;
-    const hash = await provider.send("eth_getUserOperationByHash", [result.hash]);
+    const hash = await alchemyProvider.send("eth_getUserOperationByHash", [result.hash]);
     if (hash.transactionHash) {
-      return result.hash;
+      return hash.transactionHash;
     }
 
     // wait for 1 second
