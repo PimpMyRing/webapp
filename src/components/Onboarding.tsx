@@ -9,6 +9,7 @@ import {
 import { ethers } from 'ethers';
 import { NFT_ADDRESS } from '../constant';
 import { useNavigate } from 'react-router-dom';
+import { isSbtOwner } from '../utils/isSbtOwner';
 
 const OnboardingStep: React.FC = () => {
   const [privacyLevel, setPrivacyLevel] = useState<'full' | 'partial'>('full');
@@ -101,6 +102,7 @@ const OnboardingStep: React.FC = () => {
   };
 
   const handleExportKeyImages = async () => {
+    if (!metaMaskAddress) return;
     console.log('Exporting key images with linkability flag "chainId-dao-of-the-ring"');
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const chainId = await provider.getNetwork();
@@ -110,7 +112,12 @@ const OnboardingStep: React.FC = () => {
       const keyImage = keyImages.find((ki) => ki.address.toLowerCase() === metaMaskAddress?.toLowerCase())?.keyImage;
       if (!keyImage) return;
       setKeyImage(keyImage);
-      setStep(5);
+      // if the user already owns a nft, skip ,the mint phase
+      if (await isSbtOwner(metaMaskAddress)) {
+        setStep(6);
+      } else {
+        setStep(5);
+      }
     }
   };
 

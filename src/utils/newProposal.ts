@@ -3,7 +3,8 @@ import { GOVERNANCE_CONTRACT } from "../constant";
 import { getRing } from "./vote";
 import { ethers } from "ethers";
 import { Point, RingSignature } from "@cypher-laboratory/alicesring-lsag";
-import {GovernanceContractAbi} from "../abi/DAOofTheRing";
+import { GovernanceContractAbi } from "../abi/DAOofTheRing";
+import { smartAccountClient } from "../alchemy-aa";
 
 export async function getProposalCount(chainId: number): Promise<number> {
   try {
@@ -24,13 +25,13 @@ export async function getProposalCount(chainId: number): Promise<number> {
       default:
         throw new Error("Unsupported chainId");
     }
-    
+
     // Create an instance of a contract
     const contract = new ethers.Contract(governanceAddress, GovernanceContractAbi, provider);
-    
+
     // Call the proposalCount function
     const proposalCount = await contract.proposalCount();
-    
+
     // Return the proposal count as a number
     return proposalCount.toNumber();
   } catch (error) {
@@ -87,7 +88,7 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
   const signature: RingSignature = RingSignature.fromBase64(sig);
 
   const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner(); // Use a relay so the user does not leak their address
+  // const signer = provider.getSigner(); // Use a relay so the user does not leak their address
 
   let address = '';
   switch (chainId) {
@@ -107,7 +108,7 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
   const contract = new ethers.Contract(
     address,
     GovernanceContractAbi,
-    signer
+    provider,
   );
 
   const formattedRing: bigint[] = [];
@@ -117,18 +118,54 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
     formattedRing.push(pointRing[i].y);
   }
 
-  const tx = await contract.anonProposal(
-    proposal.description,
-    proposal.target || ethers.constants.AddressZero,
-    proposal.value || 0n,
-    proposal.calldata || "0x",
-    formattedRing,
-    signature.getResponses(),
-    signature.getChallenge(),
-    [signature.getKeyImage().x, signature.getKeyImage().y],
-    `${chainId}_dao-of-the-ring`,
-    signature.getEvmWitnesses()
+  // const tx = await contract.anonProposal(
+  //   proposal.description,
+  //   proposal.target || ethers.constants.AddressZero,
+  //   proposal.value || 0n,
+  //   proposal.calldata || "0x",
+  //   formattedRing,
+  //   signature.getResponses(),
+  //   signature.getChallenge(),
+  //   [signature.getKeyImage().x, signature.getKeyImage().y],
+  //   `${chainId}_dao-of-the-ring`,
+  //   signature.getEvmWitnesses()
+  // );
+
+  // encode the function call
+  const callData = contract.interface.encodeFunctionData(
+    "anonProposal",
+    [
+      proposal.description,
+      proposal.target || ethers.constants.AddressZero,
+      proposal.value || 0n,
+      proposal.calldata || "0x",
+      formattedRing,
+      signature.getResponses(),
+      signature.getChallenge(),
+      [signature.getKeyImage().x, signature.getKeyImage().y],
+      `${chainId}_dao-of-the-ring`,
+      signature.getEvmWitnesses()
+    ]
   );
 
-  return (await tx.wait()).transactionHash;
+  const smartAccount = await smartAccountClient(chainId.toString() as "10" | "11155420" | "8453");
+
+  const result = await smartAccount.sendUserOperation({
+    uo: { target: contract.address as `0x${string}`, data: "0x", value: BigInt(0) },
+  });
+
+  // get the actual txHash
+  let cpt = 0;
+  do {
+    cpt++;
+    const hash = await provider.send("eth_getUserOperationByHash", [result.hash]);
+    if (hash.transactionHash) {
+      return result.hash;
+    }
+
+    // wait for 1 second
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  } while (cpt < 10);
+
+  throw new Error("No tx hash have been retrieved for the userOpHash: " + result.hash + ". Please check the txs from the account address: " + smartAccount.account.address);
 }
