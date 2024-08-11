@@ -5,9 +5,9 @@ FROM node:20-alpine
 RUN apk add --no-cache yarn
 
 # Set up env variables
-ARG SECRET_ALCHEMY_API_KEY
+ARG ALCHEMY_API_KEY
 
-ENV REACT_APP_ALCHEMY_API_KEY=$SECRET_ALCHEMY_API_KEY
+ENV REACT_APP_ALCHEMY_API_KEY=$ALCHEMY_API_KEY
 
 # Set the working directory to /app
 WORKDIR /app
