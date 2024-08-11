@@ -71,7 +71,11 @@ export async function newProposal(chainId: number, proposal: { description: stri
 
 
 export async function newAnonProposal(chainId: number, userAddress: string, proposal: { description: string, target?: string, value?: bigint, calldata?: string }): Promise<string> {
-  const ring = chainId !== 8453 ? await getRing() : [];
+  if(chainId !== 11155420) {
+    alert("for this poc, Private & gasless proposal in only available on optimism sepolia");
+    throw new Error("for this poc, Private & gasless voting in only available on optimism sepolia");
+  }
+  const ring = await getRing();
 
   // message = keccak256(abi.encodePacked(proposal description, target, value, callData))
   const message = ethers.utils.solidityKeccak256(
@@ -93,15 +97,15 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
 
   let address = '';
   switch (chainId) {
-    case 10:
-      address = GOVERNANCE_CONTRACT["10"];
-      break;
+    // case 10:
+    //   address = GOVERNANCE_CONTRACT["10"];
+    //   break;
     case 11155420:
       address = GOVERNANCE_CONTRACT["11155420"];
       break;
-    case 8453:
-      address = GOVERNANCE_CONTRACT["8453"];
-      break;
+    // case 8453:
+    //   address = GOVERNANCE_CONTRACT["8453"];
+    //   break;
     default:
       throw new Error("Unsupported chainId");
   }
@@ -154,6 +158,7 @@ export async function newAnonProposal(chainId: number, userAddress: string, prop
   const result = await smartAccount.sendUserOperation({
     uo: { target: contract.address as `0x${string}`, data: callData as `0x${string}`, value: BigInt(0) },
   });
+
   // console.log("result: ", result);
   // get the actual txHash
   const alchemyProvider = new ethers.providers.JsonRpcProvider(ALCHEMY_URL[chainId.toString() as "10" | "11155420" | "8453"]);

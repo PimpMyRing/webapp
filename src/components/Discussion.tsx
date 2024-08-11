@@ -35,6 +35,8 @@ const Discussion: React.FC<DiscussionProps> = ({ proposalId, chainId }) => {
   }, [proposalId, chainId]);
 
   const handleAddMessage = async () => {
+    if (!address) return;
+
     if (newMessage.trim() === '') {
       setError('Message cannot be empty.');
       return;
@@ -42,22 +44,15 @@ const Discussion: React.FC<DiscussionProps> = ({ proposalId, chainId }) => {
     setIsSubmitting(true);
 
     try {
+      const userId = await submitMessageRing(proposalId, address, 'full', newMessage);
       const newMessageObject: Omit<Message, 'id'> = {
         body: newMessage,
-        sender: 'Anon Ring Member',
+        sender: "Anon: 0x" + userId.slice(0, 8),
         date: new Date().toISOString(),
       };
-      const result= await submitMessageRing(proposalId,address ||'', 'full', newMessage);
-      if(result)
-      {
-        await postMessage(proposalId, newMessageObject);
+      await postMessage(proposalId, newMessageObject);
 
-      }
-      else {
-        throw new Error("Failed to sign the message.");
-      }
 
-      
       setDiscussion(prev => {
         if (prev) {
           return {

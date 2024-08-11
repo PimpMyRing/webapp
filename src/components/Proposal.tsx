@@ -123,7 +123,10 @@ const ProposalDetail: React.FC = () => {
               </button>
               <button
                 className="bg-blue-600 text-white rounded px-4 py-2"
-                onClick={() => handleVote(true, JSON.parse(localStorage.getItem(`${address}_${chainId}`)!).privacyLevel)}
+                onClick={() => {
+                  console.log(address, chainId);
+                  return handleVote(true, JSON.parse(localStorage.getItem(`${address}_${chainId}`)!).privacyLevel)
+                }}
                 disabled={isVoting}
               >
                 {isVoting && !voteData ? (

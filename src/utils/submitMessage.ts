@@ -4,7 +4,7 @@ import { Point, RingSignature, sortRing } from "@cypher-laboratory/alicesring-ls
 import { GET_RING_URL } from "../constant";
 import { useAccount } from 'wagmi';
 
-export async function submitMessageRing( proposalId: string, userAddress: string, privacyLevel: 'full' | 'partial',newMessage:string): Promise<boolean> {
+export async function submitMessageRing( proposalId: string, userAddress: string, privacyLevel: 'full' | 'partial',newMessage:string): Promise<string> {
   const ring = await getRing();
   console.log('Initiating message for proposalID:', proposalId);
   // message = keccak256(abi.encodePacked(_proposalId))
@@ -42,7 +42,7 @@ export async function submitMessageRing( proposalId: string, userAddress: string
     console.log('Parsed Signature:', signature);
 
     
-    return true;
+    return signature.getKeyImage().serialize();
 
   } catch (error) {
     console.error("Error while signing message:", error);

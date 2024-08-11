@@ -14,9 +14,23 @@ const MyProfile: React.FC = () => {
   const navigate = useNavigate();
   const { isConnected, address } = useAccount();
 
+  const handleChainChanged = () => {
+    console.log(`Network changed`);
+    // Reload the page to ensure the app uses the new network
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    const ethereum = window.ethereum as any;
+    ethereum.on('chainChanged', handleChainChanged);
+
+    return () => {
+      ethereum.off('chainChanged', handleChainChanged);
+    };
+  });
 
   const checkOnboarding = () => {
-    if(!address) return;
+    if (!address) return;
     (async () => {
       // get chainId from the provider
       const provider = window.ethereum;
@@ -32,19 +46,26 @@ const MyProfile: React.FC = () => {
       console.log('onboarded:', onboarded);
       if (onboarded === null || onboarded === 'false') {
         // checks if the user his a token owner
-        console.log("is owner ? ", await isSbtOwner(address));
-          if (address && await isSbtOwner(address)) {            
-            localStorage.setItem('onboarded' + chainId, 'true');
-            return;
-          }
-        if (refusedAt) {
-          const refusedTime = new Date(parseInt(refusedAt, 10)).getTime();
-          const tenMinutesInMs = 10 * 60 * 1000;
-          if (currentTime - refusedTime > tenMinutesInMs) {
-            setShowOnboardingPopup(true);
-          }
+        // console.log("is owner ? ", await isSbtOwner(address));
+        console.log('chainId: ', chainId);
+        console.log('is owner ? ', await isSbtOwner(address));
+        console.log('onboarded is ls:', localStorage.getItem('onboarded' + chainId));
+        if (address && await isSbtOwner(address) && localStorage.getItem('onboarded' + chainId) !== null) {
+          console.log('is owner');
+          localStorage.setItem('onboarded' + chainId, 'true');
+          return;
         } else {
           setShowOnboardingPopup(true);
+
+          if (refusedAt) {
+            const refusedTime = new Date(parseInt(refusedAt, 10)).getTime();
+            const tenMinutesInMs = 10 * 60 * 1000;
+            if (currentTime - refusedTime > tenMinutesInMs) {
+              setShowOnboardingPopup(true);
+            }
+          } else {
+            setShowOnboardingPopup(true);
+          }
         }
       }
     })();
